@@ -1,0 +1,186 @@
+buildscript {
+    def buildConfig = new Properties()
+    project.ext.buildConfigFile = file('build.properties')
+    buildConfigFile.withInputStream(buildConfig.&load)
+    project.ext.buildConfig = buildConfig
+    project.ext.buildDate = new Date()
+
+    repositories {
+        maven { url = 'https://files.minecraftforge.net/maven' }
+        maven { url = 'https://repo.spongepowered.org/maven' }
+        mavenCentral()
+        google()
+    }
+
+    dependencies {
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: buildConfig.forge_gradle_version, changing: false
+    }
+}
+
+apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'eclipse'
+apply plugin: 'java'
+apply plugin: 'maven-publish'
+
+version = "${buildConfig.project_version}.${buildConfig.project_build_number}"
+group = "io.karma.${buildConfig.project_id}"
+archivesBaseName = "${buildConfig.project_name}-${buildConfig.mc_version}"
+java.toolchain.languageVersion = JavaLanguageVersion.of(buildConfig.java_version)
+
+minecraft {
+    mappings channel: 'official', version: buildConfig.mc_version as String
+    accessTransformer = file("src/main/resources/META-INF/${buildConfig.project_id}_at.cfg")
+
+    runs {
+        client {
+            workingDirectory project.file('run')
+            property 'forge.logging.console.level', 'debug'
+            property 'mixin.debug', 'true'
+            jvmArgs '-Xms512M', '-Xmx4096M'
+
+            mods {
+                projectx {
+                    source sourceSets.main
+                }
+            }
+        }
+
+        server {
+            workingDirectory project.file('run')
+            property 'forge.logging.console.level', 'debug'
+            property 'mixin.debug', 'true'
+            jvmArgs '-Xms512M', '-Xmx4096M'
+
+            mods {
+                projectx {
+                    source sourceSets.main
+                }
+            }
+        }
+
+        data {
+            workingDirectory project.file('run')
+            property 'forge.logging.console.level', 'debug'
+            property 'mixin.debug', 'true'
+            jvmArgs '-Xms256M', '-Xmx2048M'
+
+            args '--mod', buildConfig.project_id, '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
+
+            mods {
+                projectx {
+                    source sourceSets.main
+                }
+            }
+        }
+    }
+}
+
+sourceSets.main.resources { srcDir 'src/generated/resources' }
+
+repositories {
+    maven { url = 'https://chickenbones.net/maven' }
+    maven { url = 'https://thedarkcolour.github.io/KotlinForForge' }
+    maven { url = 'https://dvs1.progwml6.com/files/maven' }
+    maven { url = 'https://repo.spongepowered.org/maven' }
+    mavenCentral()
+    google()
+}
+
+dependencies {
+    minecraft group: 'net.minecraftforge', name: 'forge', version: "${buildConfig.mc_version}-${buildConfig.forge_version}"
+
+    implementation group: 'codechicken', name: 'CodeChickenLib', version: "${buildConfig.mc_version}-${buildConfig.ccl_version}", classifier: 'deobf'
+}
+
+configurations {
+    annotationProcessor.extendsFrom minecraft
+}
+
+jar {
+    finalizedBy('reobfJar')
+
+    manifest {
+        attributes([
+                //@formatter:off
+                'Specification-Title': 		buildConfig.project_name,
+                'Specification-Vendor': 	'Karma Krafts',
+                'Specification-Version': 	'1',
+                'Implementation-Title': 	buildConfig.project_name,
+                'Implementation-Version': 	project.version,
+                'Implementation-Vendor': 	'Karma Krafts',
+                'Implementation-Timestamp': buildDate.format("yyyy-MM-dd'T'HH:mm:ssZ"),
+                //@formatter:on
+        ])
+    }
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives jar
+    archives sourcesJar
+}
+
+tasks.withType(JavaCompile) {
+    sourceCompatibility = buildConfig.java_version
+    targetCompatibility = buildConfig.java_version
+    options.encoding = 'UTF-8'
+}
+
+publishing {
+    repositories {
+        if (System.getenv('MAVEN_PASS')) {
+            maven {
+                url "https://nexus.covers1624.net/repository/karmakrafts-releases/"
+
+                credentials {
+                    username 'kitsunealex'
+                    password System.getenv('MAVEN_PASS')
+                }
+            }
+        }
+    }
+    publications {
+        ProjectX(MavenPublication) {
+            groupId project.group
+            artifactId archivesBaseName
+            version project.version
+            artifact jar
+            artifact sourcesJar
+
+            pom {
+                name = archivesBaseName
+                description = archivesBaseName
+                //The publish plugin doesnt like GString's here apparently..
+                url = "https://git.karmakrafts.dev/kk/mc-mods/${buildConfig.project_id}".toString()
+
+                scm {
+                    url = "https://git.karmakrafts.dev/kk/mc-mods/${buildConfig.project_id}".toString()
+                }
+
+                issueManagement {
+                    system = 'gitlab'
+                    url = "https://git.karmakrafts.dev/kk/mc-mods/${buildConfig.project_id}/issues".toString()
+                }
+
+                licenses {
+                    license {
+                        name = "The MIT License"
+                        url = "https://git.karmakrafts.dev/kk/mc-mods/${buildConfig.project_id}/-/blob/master/LICENSE"
+                        distribution = 'repo'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id = 'kitsunealex'
+                        name = 'KitsuneAlex'
+                    }
+                }
+            }
+        }
+    }
+}
