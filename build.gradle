@@ -36,10 +36,12 @@ minecraft {
             workingDirectory project.file('run')
             property 'forge.logging.console.level', 'debug'
             property 'mixin.debug', 'true'
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
             jvmArgs '-Xms512M', '-Xmx4096M'
 
             mods {
-                projectx {
+                calcium {
                     source sourceSets.main
                 }
             }
@@ -49,10 +51,12 @@ minecraft {
             workingDirectory project.file('run')
             property 'forge.logging.console.level', 'debug'
             property 'mixin.debug', 'true'
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
             jvmArgs '-Xms512M', '-Xmx4096M'
 
             mods {
-                projectx {
+                calcium {
                     source sourceSets.main
                 }
             }
@@ -62,12 +66,14 @@ minecraft {
             workingDirectory project.file('run')
             property 'forge.logging.console.level', 'debug'
             property 'mixin.debug', 'true'
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
             jvmArgs '-Xms256M', '-Xmx2048M'
 
             args '--mod', buildConfig.project_id, '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
 
             mods {
-                projectx {
+                calcium {
                     source sourceSets.main
                 }
             }
@@ -78,6 +84,14 @@ minecraft {
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 repositories {
+    maven {
+        url = 'https://cursemaven.com'
+
+        content {
+            includeGroup 'curse.maven'
+        }
+    }
+
     maven { url = 'https://chickenbones.net/maven' }
     maven { url = 'https://thedarkcolour.github.io/KotlinForForge' }
     maven { url = 'https://dvs1.progwml6.com/files/maven' }
@@ -90,6 +104,7 @@ dependencies {
     minecraft group: 'net.minecraftforge', name: 'forge', version: "${buildConfig.mc_version}-${buildConfig.forge_version}"
 
     implementation group: 'codechicken', name: 'CodeChickenLib', version: "${buildConfig.mc_version}-${buildConfig.ccl_version}", classifier: 'deobf'
+    implementation fg.deobf("curse.maven:halogen-491233:${buildConfig.halogen_version}")
 }
 
 configurations {

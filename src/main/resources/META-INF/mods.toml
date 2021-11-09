@@ -1,35 +1,27 @@
-modLoader = "kotlinforforge"
-loaderVersion = "[1,)"
-license = "MIT License"
-
+modLoader="javafml"
+loaderVersion="[36,)"
+license="The MIT License"
 [[mods]]
-modId = "projectx"
-version = "${file.jarVersion}"
-displayName = "ProjectX 3"
-logoFile = "projectx_logo.png"
-credits = ""
-authors = "KitsuneAlex, BeastLe9enD"
-description = '''
-    The 3rd installment of ProjectX, a XyCraft inspired decoration and technology mod.
-    '''
-
-[[dependencies.projectx]]
-modId = "forge"
-mandatory = true
-versionRange = "[35,)"
-ordering = "NONE"
-side = "BOTH"
-
-[[dependencies.projectx]]
-modId = "minecraft"
-mandatory = true
-versionRange = "[1.16.4,)"
-ordering = "NONE"
-side = "BOTH"
-
-[[dependencies.projectx]]
-modId = "codechickenlib"
-mandatory = true
-versionRange = "[4.0.1,5.0)"
-ordering = "NONE"
-side = "BOTH"
+modId="calcium"
+version="${file.jarVersion}"
+displayName="Calcium"
+#updateJSONURL=""
+displayURL="https://git.karmakrafts.dev/kk/mc-mods/calcium"
+logoFile="calcium.png"
+credits="Thanks to covers1624 for helping out with the CCL side of things <3"
+authors="KitsuneAlex"
+description='''
+A compatibility patch between CodeChickenLib and Magnesium/Halogen.
+'''
+[[dependencies.calcium]]
+    modId="forge"
+    mandatory=true
+    versionRange="[36,)"
+    ordering="NONE"
+    side="BOTH"
+[[dependencies.calcium]]
+    modId="minecraft"
+    versionRange="[1.16.5]"
+    mandatory=true
+    ordering="NONE"
+    side="BOTH"
