@@ -31,9 +31,3 @@ A compatibility patch between CodeChickenLib and Magnesium/Halogen.
     mandatory=true
     ordering="BEFORE"
     side="CLIENT"
-[[dependencies.calcium]]
-    modId="sodium"
-    versionRange="[2.9.10,)"
-    mandatory=true
-    ordering="BEFORE"
-    side="CLIENT"
