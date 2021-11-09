@@ -18,10 +18,22 @@ A compatibility patch between CodeChickenLib and Magnesium/Halogen.
     mandatory=true
     versionRange="[36,)"
     ordering="NONE"
-    side="BOTH"
+    side="CLIENT"
 [[dependencies.calcium]]
     modId="minecraft"
     versionRange="[1.16.5]"
     mandatory=true
     ordering="NONE"
-    side="BOTH"
+    side="CLIENT"
+[[dependencies.calcium]]
+    modId="codechickenlib"
+    versionRange="[4.0.3.434,)"
+    mandatory=true
+    ordering="BEFORE"
+    side="CLIENT"
+[[dependencies.calcium]]
+    modId="sodium"
+    versionRange="[2.9.10,)"
+    mandatory=true
+    ordering="BEFORE"
+    side="CLIENT"
