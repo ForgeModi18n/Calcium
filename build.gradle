@@ -109,7 +109,6 @@ repositories {
 dependencies {
     minecraft group: 'net.minecraftforge', name: 'forge', version: "${buildConfig.mc_version}-${buildConfig.forge_version}"
 
-    implementation group: 'org.jetbrains', name: 'annotations', version: buildConfig.annotations_version
     implementation group: 'codechicken', name: 'CodeChickenLib', version: "${buildConfig.mc_version}-${buildConfig.ccl_version}", classifier: 'deobf'
     implementation fg.deobf("curse.maven:halogen-491233:${buildConfig.halogen_version}")
 
@@ -175,7 +174,7 @@ publishing {
         }
     }
     publications {
-        ProjectX(MavenPublication) {
+        Calcium(MavenPublication) {
             groupId project.group
             artifactId archivesBaseName
             version project.version

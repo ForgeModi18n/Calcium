@@ -10,8 +10,8 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.util.List;
 
 @Mod(CalciumMod.MODID)
@@ -27,14 +27,15 @@ public class CalciumMod {
         DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> bus.addListener(this::onClientSetup));
     }
 
+    @Nonnull
     @OnlyIn(Dist.CLIENT)
-    public static @NotNull List<ICCBlockRenderer> getCustomRenderers() {
+    public static List<ICCBlockRenderer> getCustomRenderers() {
         return customRenderers;
     }
 
     @SuppressWarnings("unchecked")
     @OnlyIn(Dist.CLIENT)
-    private void onClientSetup(@NotNull FMLClientSetupEvent e) {
+    private void onClientSetup(@Nonnull FMLClientSetupEvent e) {
         try {
             final var field = BlockRenderingRegistry.class.getDeclaredField("blockRenderers");
             field.setAccessible(true);

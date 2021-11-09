@@ -9,8 +9,8 @@ import me.jellysquid.mods.sodium.client.render.chunk.format.ModelVertexSink;
 import net.minecraft.util.Direction;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 
 @OnlyIn(Dist.CLIENT)
@@ -24,45 +24,52 @@ public final class SinkingVertexBuilder implements IVertexBuilder {
     private SinkingVertexBuilder() {}
     //@formatter:on
 
-    public static @NotNull SinkingVertexBuilder getInstance() {
+    @Nonnull
+    public static SinkingVertexBuilder getInstance() {
         return instance.get();
     }
 
+    @Nonnull
     @Override
-    public @NotNull IVertexBuilder vertex(double x, double y, double z) {
+    public IVertexBuilder vertex(double x, double y, double z) {
         currentVertex.x = (float) x;
         currentVertex.y = (float) y;
         currentVertex.z = (float) z;
         return this;
     }
 
+    @Nonnull
     @Override
-    public @NotNull IVertexBuilder color(int r, int g, int b, int a) {
+    public IVertexBuilder color(int r, int g, int b, int a) {
         currentVertex.color = Colour.packRGBA(r, g, b, a);
         return this;
     }
 
+    @Nonnull
     @Override
-    public @NotNull IVertexBuilder uv(float u, float v) {
+    public IVertexBuilder uv(float u, float v) {
         currentVertex.u = u;
         currentVertex.v = v;
         return this;
     }
 
+    @Nonnull
     @Override
-    public @NotNull IVertexBuilder overlayCoords(int u, int v) {
+    public IVertexBuilder overlayCoords(int u, int v) {
         return this;
     }
 
+    @Nonnull
     @Override
-    public @NotNull IVertexBuilder uv2(int u, int v) {
+    public IVertexBuilder uv2(int u, int v) {
         currentVertex.lU = u;
         currentVertex.lV = v;
         return this;
     }
 
+    @Nonnull
     @Override
-    public @NotNull IVertexBuilder normal(float x, float y, float z) {
+    public IVertexBuilder normal(float x, float y, float z) {
         currentVertex.nx = x;
         currentVertex.ny = y;
         currentVertex.nz = z;
@@ -80,7 +87,7 @@ public final class SinkingVertexBuilder implements IVertexBuilder {
         currentVertex.reset();
     }
 
-    public void flush(@NotNull ChunkModelBuffers buffers) {
+    public void flush(@Nonnull ChunkModelBuffers buffers) {
         final var numVertices = vertices.size();
 
         if (numVertices % 4 != 0) {
@@ -150,14 +157,15 @@ public final class SinkingVertexBuilder implements IVertexBuilder {
             color = 0;
         }
 
-        public void writeToSink(@NotNull ModelVertexSink sink) {
+        public void writeToSink(@Nonnull ModelVertexSink sink) {
             // Stupid name, this writes a vertex of a quad, not a quad..
             // This also uses ARGB instead of RGBA, so flip that around!
             sink.writeQuad(x, y, z, Colour.flipABGR(color), u, v, lV << 16 | lU);
         }
 
+        @Nonnull
         @Override
-        public @NotNull Vertex copy() {
+        public Vertex copy() {
             return new Vertex(x, y, z, nx, ny, nz, u, v, lU, lV, color);
         }
     }
