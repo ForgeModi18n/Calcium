@@ -1,0 +1,10 @@
+{
+  "package": "io.karma.calcium.client.mixins",
+  "required": true,
+  "compatibilityLevel": "JAVA_11",
+  "minVersion": "0.8",
+  "refmap": "mixins.refmap.calcium.json",
+  "client": [
+    "BlockRendererMixin"
+  ]
+}

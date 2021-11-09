@@ -14,10 +14,12 @@ buildscript {
 
     dependencies {
         classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: buildConfig.forge_gradle_version, changing: false
+        classpath group: 'org.spongepowered', name: 'mixingradle', version: buildConfig.mixin_gradle_version
     }
 }
 
 apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'org.spongepowered.mixin'
 apply plugin: 'eclipse'
 apply plugin: 'java'
 apply plugin: 'maven-publish'
@@ -83,6 +85,10 @@ minecraft {
 
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
+mixin {
+    add sourceSets.main, "mixins.refmap.${buildConfig.project_id}.json"
+}
+
 repositories {
     maven {
         url = 'https://cursemaven.com'
@@ -105,6 +111,13 @@ dependencies {
 
     implementation group: 'codechicken', name: 'CodeChickenLib', version: "${buildConfig.mc_version}-${buildConfig.ccl_version}", classifier: 'deobf'
     implementation fg.deobf("curse.maven:halogen-491233:${buildConfig.halogen_version}")
+
+    runtimeOnly group: 'net.minecraftforge', name: 'Scorge', version: buildConfig.scorge_version
+    runtimeOnly group: 'codechicken', name: 'CBMultipart', version: "${buildConfig.mc_version}-${buildConfig.cbm_version}", classifier: 'deobf'
+    runtimeOnly group: 'mrtjp', name: 'ProjectRed', version: "${buildConfig.mc_version}-${buildConfig.pr_version}", classifier: 'core'
+    runtimeOnly group: 'mrtjp', name: 'ProjectRed', version: "${buildConfig.mc_version}-${buildConfig.pr_version}", classifier: 'exploration'
+    runtimeOnly group: 'mrtjp', name: 'ProjectRed', version: "${buildConfig.mc_version}-${buildConfig.pr_version}", classifier: 'transmission'
+    runtimeOnly group: 'mrtjp', name: 'ProjectRed', version: "${buildConfig.mc_version}-${buildConfig.pr_version}", classifier: 'illumination'
 }
 
 configurations {
