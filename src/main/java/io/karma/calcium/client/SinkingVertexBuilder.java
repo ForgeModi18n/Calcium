@@ -11,7 +11,9 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 @OnlyIn(Dist.CLIENT)
 public final class SinkingVertexBuilder implements IVertexBuilder {
@@ -87,6 +89,7 @@ public final class SinkingVertexBuilder implements IVertexBuilder {
         currentVertex.reset();
     }
 
+    @SuppressWarnings("unchecked")
     public void flush(@Nonnull ChunkModelBuffers buffers) {
         final int numVertices = vertices.size();
 
@@ -94,28 +97,59 @@ public final class SinkingVertexBuilder implements IVertexBuilder {
             throw new IllegalStateException("Invalid number of vertices");
         }
 
-        byte changedSides = 0B00000000;
+        final ModelQuadFacing[] facings = ModelQuadFacing.values();
+
+        final ArrayList<Quad>[] sortedQuads = new ArrayList[facings.length];
+        Arrays.fill(sortedQuads, new ArrayList<Quad>());
 
         for (int i = 0; i < numVertices; i += 4) {
-            final Vertex firstVertex = vertices.get(i);
-            final Direction dir = Direction.fromNormal((int) firstVertex.nx, (int) firstVertex.ny, (int) firstVertex.nz);
-            final ModelQuadFacing facing = dir == null ? ModelQuadFacing.UNASSIGNED : ModelQuadFacing.fromDirection(dir);
-            final ModelVertexSink sink = buffers.getSink(facing);
-
-            firstVertex.writeToSink(sink);
-            vertices.get(i + 1).writeToSink(sink);
-            vertices.get(i + 2).writeToSink(sink);
-            vertices.get(i + 3).writeToSink(sink);
-
-            changedSides |= 0B00000001 << facing.ordinal();
+            final Quad q = new Quad(vertices.get(i), vertices.get(i + 1), vertices.get(i + 2), vertices.get(i + 3));
+            final Direction d = q.getFacing();
+            final ModelQuadFacing f = d == null ? ModelQuadFacing.UNASSIGNED : ModelQuadFacing.fromDirection(d);
+            sortedQuads[f.ordinal()].add(q);
         }
 
-        for (final ModelQuadFacing facing : ModelQuadFacing.values()) {
-            if (((changedSides >> facing.ordinal()) & 0B00000001) == 0) {
+        for (final ModelQuadFacing facing : facings) {
+            final ArrayList<Quad> quads = sortedQuads[facing.ordinal()];
+
+            if (quads.isEmpty()) {
                 continue;
             }
 
-            buffers.getSink(facing).flush();
+            final ModelVertexSink sink = buffers.getSink(facing);
+            sink.ensureCapacity(quads.size() * 4);
+
+            for (final Quad q : quads) {
+                q.writeToSink(sink);
+            }
+
+            sink.flush();
+        }
+    }
+
+    private static class Quad {
+        public final Vertex vertex1;
+        public final Vertex vertex2;
+        public final Vertex vertex3;
+        public final Vertex vertex4;
+
+        public Quad(@Nonnull Vertex vertex1, @Nonnull Vertex vertex2, @Nonnull Vertex vertex3, @Nonnull Vertex vertex4) {
+            this.vertex1 = vertex1;
+            this.vertex2 = vertex2;
+            this.vertex3 = vertex3;
+            this.vertex4 = vertex4;
+        }
+
+        public void writeToSink(@Nonnull ModelVertexSink sink) {
+            vertex1.writeToSink(sink);
+            vertex2.writeToSink(sink);
+            vertex3.writeToSink(sink);
+            vertex4.writeToSink(sink);
+        }
+
+        @Nullable
+        public Direction getFacing() {
+            return Direction.fromNormal((int) vertex1.nx, (int) vertex1.ny, (int) vertex1.nz);
         }
     }
 
