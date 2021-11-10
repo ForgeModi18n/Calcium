@@ -110,7 +110,7 @@ dependencies {
     minecraft group: 'net.minecraftforge', name: 'forge', version: "${buildConfig.mc_version}-${buildConfig.forge_version}"
 
     implementation group: 'codechicken', name: 'CodeChickenLib', version: "${buildConfig.mc_version}-${buildConfig.ccl_version}", classifier: 'deobf'
-    implementation fg.deobf("curse.maven:halogen-491233:${buildConfig.halogen_version}")
+    implementation fg.deobf("curse.maven:sodium-reforged-532724:${buildConfig.magnesium_version}")
 
     runtimeOnly group: 'net.minecraftforge', name: 'Scorge', version: buildConfig.scorge_version
     runtimeOnly group: 'codechicken', name: 'CBMultipart', version: "${buildConfig.mc_version}-${buildConfig.cbm_version}", classifier: 'deobf'
