@@ -33,7 +33,7 @@ A compatibility patch between CodeChickenLib and Magnesium/Halogen.
     side="CLIENT"
 [[dependencies.calcium]]
     modId="magnesium"
-    versionRange="[1.3,)"
+    versionRange="[1.0,)"
     mandatory=true
     ordering="BEFORE"
     side="CLIENT"

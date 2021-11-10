@@ -21,10 +21,12 @@ public final class SinkingVertexBuilder implements IVertexBuilder {
 
     private final ArrayList<Vertex> vertices = new ArrayList<>();
     private final Vertex currentVertex = new Vertex();
+    @SuppressWarnings("unchecked")
+    private final ArrayList<Quad>[] quadBuffer = new ArrayList[ModelQuadFacing.values().length];
 
-    //@formatter:off
-    private SinkingVertexBuilder() {}
-    //@formatter:on
+    private SinkingVertexBuilder() {
+        Arrays.fill(quadBuffer, new ArrayList<Quad>());
+    }
 
     @Nonnull
     public static SinkingVertexBuilder getInstance() {
@@ -89,7 +91,6 @@ public final class SinkingVertexBuilder implements IVertexBuilder {
         currentVertex.reset();
     }
 
-    @SuppressWarnings("unchecked")
     public void flush(@Nonnull ChunkModelBuffers buffers) {
         final int numVertices = vertices.size();
 
@@ -99,18 +100,19 @@ public final class SinkingVertexBuilder implements IVertexBuilder {
 
         final ModelQuadFacing[] facings = ModelQuadFacing.values();
 
-        final ArrayList<Quad>[] sortedQuads = new ArrayList[facings.length];
-        Arrays.fill(sortedQuads, new ArrayList<Quad>());
+        for (final ModelQuadFacing facing : facings) {
+            quadBuffer[facing.ordinal()].clear();
+        }
 
         for (int i = 0; i < numVertices; i += 4) {
             final Quad q = new Quad(vertices.get(i), vertices.get(i + 1), vertices.get(i + 2), vertices.get(i + 3));
             final Direction d = q.getFacing();
             final ModelQuadFacing f = d == null ? ModelQuadFacing.UNASSIGNED : ModelQuadFacing.fromDirection(d);
-            sortedQuads[f.ordinal()].add(q);
+            quadBuffer[f.ordinal()].add(q);
         }
 
         for (final ModelQuadFacing facing : facings) {
-            final ArrayList<Quad> quads = sortedQuads[facing.ordinal()];
+            final ArrayList<Quad> quads = quadBuffer[facing.ordinal()];
 
             if (quads.isEmpty()) {
                 continue;
