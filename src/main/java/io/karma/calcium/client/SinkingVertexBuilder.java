@@ -88,7 +88,7 @@ public final class SinkingVertexBuilder implements IVertexBuilder {
     }
 
     public void flush(@Nonnull ChunkModelBuffers buffers) {
-        final var numVertices = vertices.size();
+        final int numVertices = vertices.size();
 
         if (numVertices % 4 != 0) {
             throw new IllegalStateException("Invalid number of vertices");
@@ -96,11 +96,11 @@ public final class SinkingVertexBuilder implements IVertexBuilder {
 
         byte changedSides = 0B00000000;
 
-        for (var i = 0; i < numVertices; i += 4) {
-            final var firstVertex = vertices.get(i);
-            final var dir = Direction.fromNormal((int) firstVertex.nx, (int) firstVertex.ny, (int) firstVertex.nz);
-            final var facing = dir == null ? ModelQuadFacing.UNASSIGNED : ModelQuadFacing.fromDirection(dir);
-            final var sink = buffers.getSink(facing);
+        for (int i = 0; i < numVertices; i += 4) {
+            final Vertex firstVertex = vertices.get(i);
+            final Direction dir = Direction.fromNormal((int) firstVertex.nx, (int) firstVertex.ny, (int) firstVertex.nz);
+            final ModelQuadFacing facing = dir == null ? ModelQuadFacing.UNASSIGNED : ModelQuadFacing.fromDirection(dir);
+            final ModelVertexSink sink = buffers.getSink(facing);
 
             firstVertex.writeToSink(sink);
             vertices.get(i + 1).writeToSink(sink);
@@ -110,7 +110,7 @@ public final class SinkingVertexBuilder implements IVertexBuilder {
             changedSides |= 0B00000001 << facing.ordinal();
         }
 
-        for (final var facing : ModelQuadFacing.values()) {
+        for (final ModelQuadFacing facing : ModelQuadFacing.values()) {
             if (((changedSides >> facing.ordinal()) & 0B00000001) == 0) {
                 continue;
             }

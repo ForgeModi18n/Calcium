@@ -1,5 +1,6 @@
 package io.karma.calcium.client.mixins;
 
+import codechicken.lib.render.block.ICCBlockRenderer;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import io.karma.calcium.CalciumMod;
 import io.karma.calcium.client.SinkingVertexBuilder;
@@ -33,10 +34,10 @@ public class BlockRendererMixin {
 
     @Inject(method = "renderModel", at = @At(value = "INVOKE_ASSIGN", target = "Lnet/minecraft/client/renderer/model/IBakedModel;getModelData(Lnet/minecraft/world/IBlockDisplayReader;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;Lnet/minecraftforge/client/model/data/IModelData;)Lnet/minecraftforge/client/model/data/IModelData;"), locals = LocalCapture.CAPTURE_FAILHARD, cancellable = true)
     private void onRenderModel(@Nonnull IBlockDisplayReader world, @Nonnull BlockState state, @Nonnull BlockPos pos, @Nonnull IBakedModel model, @Nonnull ChunkModelBuffers buffers, boolean cull, long seed, @Nonnull CallbackInfoReturnable<Boolean> cbi, @Nonnull LightPipeline lighter, @Nonnull Vector3d offset, @Nonnull IModelData modelData) {
-        for (final var renderer : CalciumMod.getCustomRenderers()) {
+        for (final ICCBlockRenderer renderer : CalciumMod.getCustomRenderers()) {
             if (renderer.canHandleBlock(world, pos, state)) {
-                final var mStack = matrixStack.get();
-                final var builder = SinkingVertexBuilder.getInstance();
+                final MatrixStack mStack = matrixStack.get();
+                final SinkingVertexBuilder builder = SinkingVertexBuilder.getInstance();
 
                 mStack.clear();
 
