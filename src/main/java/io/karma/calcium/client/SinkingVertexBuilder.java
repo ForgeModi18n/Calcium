@@ -129,7 +129,7 @@ public final class SinkingVertexBuilder implements IVertexBuilder {
         }
     }
 
-    private static class Quad {
+    private static final class Quad {
         public final Vertex vertex1;
         public final Vertex vertex2;
         public final Vertex vertex3;
@@ -155,7 +155,7 @@ public final class SinkingVertexBuilder implements IVertexBuilder {
         }
     }
 
-    private static class Vertex implements Copyable<Vertex> {
+    private static final class Vertex implements Copyable<Vertex> {
         public float x;
         public float y;
         public float z;

@@ -17,7 +17,7 @@ import java.lang.reflect.Field;
 import java.util.List;
 
 @Mod(CalciumMod.MODID)
-public class CalciumMod {
+public final class CalciumMod {
     public static final String MODID = "calcium";
     public static final Logger LOGGER = LogManager.getLogger(MODID);
 
