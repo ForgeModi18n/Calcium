@@ -3,7 +3,7 @@ package io.karma.calcium.client.mixins;
 import codechicken.lib.render.block.ICCBlockRenderer;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import io.karma.calcium.CalciumMod;
-import io.karma.calcium.client.SinkingVertexBuilder;
+import io.karma.calcium.client.render.SinkingVertexBuilder;
 import me.jellysquid.mods.sodium.client.render.chunk.compile.buffers.ChunkModelBuffers;
 import me.jellysquid.mods.sodium.client.render.pipeline.BlockRenderer;
 import net.minecraft.block.BlockState;
@@ -39,8 +39,9 @@ public class BlockRendererMixin {
                 mStack.clear();
 
                 builder.reset();
+                builder.setBuffers(buffers);
                 cbi.setReturnValue(renderer.renderBlock(state, pos, world, mStack, builder, random, modelData));
-                builder.flush(buffers);
+                builder.flush();
 
                 cbi.cancel();
             }
