@@ -15,6 +15,7 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.At.Shift;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -29,13 +30,13 @@ public class BlockRendererMixin {
     @Shadow @Final private Random random;
     //@formatter:on
 
-    @Inject(method = "renderModel", at = @At(value = "INVOKE_ASSIGN", target = "Lnet/minecraft/client/renderer/model/IBakedModel;getModelData(Lnet/minecraft/world/IBlockDisplayReader;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;Lnet/minecraftforge/client/model/data/IModelData;)Lnet/minecraftforge/client/model/data/IModelData;"), cancellable = true)
+    @Inject(method = "renderModel", at = @At(value = "INVOKE_ASSIGN", target = "Lnet/minecraft/client/renderer/model/IBakedModel;getModelData(Lnet/minecraft/world/IBlockDisplayReader;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;Lnet/minecraftforge/client/model/data/IModelData;)Lnet/minecraftforge/client/model/data/IModelData;", shift = Shift.AFTER), cancellable = true)
     private void onRenderModel(IBlockDisplayReader world, BlockState state, BlockPos pos, IBakedModel model, ChunkModelBuffers buffers, boolean cull, long seed, IModelData modelData, @Nonnull CallbackInfoReturnable<Boolean> cbi) {
+        final MatrixStack mStack = matrixStack.get();
+        final SinkingVertexBuilder builder = SinkingVertexBuilder.getInstance();
+
         for (final ICCBlockRenderer renderer : CalciumMod.getCustomRenderers(world, pos)) {
             if (renderer.canHandleBlock(world, pos, state)) {
-                final MatrixStack mStack = matrixStack.get();
-                final SinkingVertexBuilder builder = SinkingVertexBuilder.getInstance();
-
                 mStack.clear();
 
                 builder.reset();

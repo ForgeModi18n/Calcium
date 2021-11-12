@@ -12,6 +12,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import javax.annotation.Nonnull;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Arrays;
 
 /**
  * A allocation-free {@link IVertexBuilder} implementation
@@ -24,8 +25,8 @@ public final class SinkingVertexBuilder implements IVertexBuilder {
     private static final ThreadLocal<SinkingVertexBuilder> instance = ThreadLocal.withInitial(SinkingVertexBuilder::new);
 
     private final ByteBuffer buffer = ByteBuffer.allocateDirect(2097152).order(ByteOrder.nativeOrder());
+    private final int[] sideCount = new int[ModelQuadFacing.values().length];
     private int currentVertex;
-    private int currentQuadVertex;
 
     private float x;
     private float y;
@@ -55,7 +56,7 @@ public final class SinkingVertexBuilder implements IVertexBuilder {
     @Nonnull
     @Override
     public IVertexBuilder color(int r, int g, int b, int a) {
-        color = Colour.flipABGR(Colour.packRGBA(r, g, b, a));
+        color = Colour.flipABGR(Colour.packRGBA(r, g, b, a)); // We need ABGR so we compose it on the fly
         return this;
     }
 
@@ -76,7 +77,7 @@ public final class SinkingVertexBuilder implements IVertexBuilder {
     @Nonnull
     @Override
     public IVertexBuilder uv2(int u, int v) {
-        light = (v << 16) | u;
+        light = (v << 16) | u; // Compose lightmap coords into raw light value 0xVVVV_UUUU
         return this;
     }
 
@@ -91,64 +92,57 @@ public final class SinkingVertexBuilder implements IVertexBuilder {
 
     @Override
     public void endVertex() {
-        if (currentQuadVertex == 0) {
-            final Direction dir = Direction.fromNormal((int) nx, (int) ny, (int) nz);
-            final ModelQuadFacing facing = dir != null ? ModelQuadFacing.fromDirection(dir) : ModelQuadFacing.UNASSIGNED;
-            buffer.putInt(facing.ordinal());
-        }
+        final Direction dir = Direction.fromNormal((int) nx, (int) ny, (int) nz);
+        final int normal = dir != null ? dir.ordinal() : -1;
+        final int writePos = currentVertex << 5;
 
-        buffer.putFloat(x);
-        buffer.putFloat(y);
-        buffer.putFloat(z);
-        buffer.putFloat(u);
-        buffer.putFloat(v);
-        buffer.putInt(color);
-        buffer.putInt(light);
+        // Write the current quad vertex's normal, position, UVs, color and raw light values
+        buffer.putInt(writePos, normal);
+        buffer.putFloat(writePos + 4, x);
+        buffer.putFloat(writePos + 8, y);
+        buffer.putFloat(writePos + 12, z);
+        buffer.putFloat(writePos + 16, u);
+        buffer.putFloat(writePos + 20, v);
+        buffer.putInt(writePos + 24, color);
+        buffer.putInt(writePos + 28, light);
+        // We store 28 bytes per vertex
 
-        resetCurrentVertex();
-
-        if (currentQuadVertex < 3) {
-            currentQuadVertex++;
-        }
-        else {
-            currentQuadVertex = 0;
-        }
-
+        resetCurrentVertex(); // Reset the current vertex values
         currentVertex++;
     }
 
     public void reset() {
+        buffer.clear();
         buffer.rewind();
-
-        resetCurrentVertex();
         currentVertex = 0;
-        currentQuadVertex = 0;
+        Arrays.fill(sideCount, 0);
+        resetCurrentVertex();
     }
 
     public void flush(@Nonnull ChunkModelBuffers buffers) {
-        buffer.rewind();
-
         final ModelQuadFacing[] facings = ModelQuadFacing.values();
-        final int[] sidedCount = new int[facings.length];
-        byte normalMask = 0;
+        byte sideMask = 0;
 
-        for (int i = 0; i < currentVertex; i += 4) {
-            final int normal = buffer.getInt();
+        for (int vertexIdx = 0; vertexIdx < currentVertex; vertexIdx += 4) {
+            int readPos = vertexIdx << 5;
+            final int normal = buffer.getInt(readPos); // Fetch first normal for pre-selecting the vertex sink
 
-            final ModelQuadFacing facing = facings[normal];
+            final Direction dir = normal != -1 ? Direction.values()[normal] : null;
+            final ModelQuadFacing facing = dir != null ? ModelQuadFacing.fromDirection(dir) : ModelQuadFacing.UNASSIGNED;
             final ModelVertexSink sink = buffers.getSink(facing);
 
-            sink.ensureCapacity(++sidedCount[normal] << 2);
-            writeQuadVertex(sink);
-            writeQuadVertex(sink);
-            writeQuadVertex(sink);
-            writeQuadVertex(sink);
+            sink.ensureCapacity(++sideCount[normal] << 2);
 
-            normalMask |= 1 << normal;
+            writeQuadVertex(sink, readPos, 0);
+            writeQuadVertex(sink, readPos, 1);
+            writeQuadVertex(sink, readPos, 2);
+            writeQuadVertex(sink, readPos, 3);
+
+            sideMask |= 1 << facing.ordinal();
         }
 
         for (final ModelQuadFacing facing : facings) {
-            if (((normalMask >> facing.ordinal()) & 1) == 0) {
+            if (((sideMask >> facing.ordinal()) & 1) == 0) {
                 continue;
             }
 
@@ -156,14 +150,16 @@ public final class SinkingVertexBuilder implements IVertexBuilder {
         }
     }
 
-    private void writeQuadVertex(@Nonnull ModelVertexSink sink) {
-        final float x = buffer.getFloat();
-        final float y = buffer.getFloat();
-        final float z = buffer.getFloat();
-        final float u = buffer.getFloat();
-        final float v = buffer.getFloat();
-        final int color = buffer.getInt();
-        final int light = buffer.getInt();
+    private void writeQuadVertex(@Nonnull ModelVertexSink sink, int readPos, int quadVertexIdx) {
+        final int readIdx = readPos + (quadVertexIdx << 5);
+
+        final float x = buffer.getFloat(readIdx + 4);
+        final float y = buffer.getFloat(readIdx + 8);
+        final float z = buffer.getFloat(readIdx + 12);
+        final float u = buffer.getFloat(readIdx + 16);
+        final float v = buffer.getFloat(readIdx + 20);
+        final int color = buffer.getInt(readIdx + 24);
+        final int light = buffer.getInt(readIdx + 28);
 
         sink.writeQuad(x, y, z, color, u, v, light);
     }
