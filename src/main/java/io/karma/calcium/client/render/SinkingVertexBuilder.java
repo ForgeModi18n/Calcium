@@ -94,25 +94,23 @@ public final class SinkingVertexBuilder implements IVertexBuilder {
     public void endVertex() {
         final Direction dir = Direction.fromNormal((int) nx, (int) ny, (int) nz);
         final int normal = dir != null ? dir.ordinal() : -1;
-        final int writePos = currentVertex << 5;
 
         // Write the current quad vertex's normal, position, UVs, color and raw light values
-        buffer.putInt(writePos, normal);
-        buffer.putFloat(writePos + 4, x);
-        buffer.putFloat(writePos + 8, y);
-        buffer.putFloat(writePos + 12, z);
-        buffer.putFloat(writePos + 16, u);
-        buffer.putFloat(writePos + 20, v);
-        buffer.putInt(writePos + 24, color);
-        buffer.putInt(writePos + 28, light);
-        // We store 28 bytes per vertex
+        buffer.putInt(normal);
+        buffer.putFloat(x);
+        buffer.putFloat(y);
+        buffer.putFloat(z);
+        buffer.putFloat(u);
+        buffer.putFloat(v);
+        buffer.putInt(color);
+        buffer.putInt(light);
+        // We store 32 bytes per vertex
 
         resetCurrentVertex(); // Reset the current vertex values
         currentVertex++;
     }
 
     public void reset() {
-        buffer.clear();
         buffer.rewind();
         currentVertex = 0;
         Arrays.fill(sideCount, 0);
@@ -121,24 +119,45 @@ public final class SinkingVertexBuilder implements IVertexBuilder {
 
     public void flush(@Nonnull ChunkModelBuffers buffers) {
         final ModelQuadFacing[] facings = ModelQuadFacing.values();
-        byte sideMask = 0;
+        final int numQuads = currentVertex >> 2;
 
-        for (int vertexIdx = 0; vertexIdx < currentVertex; vertexIdx += 4) {
-            int readPos = vertexIdx << 5;
-            final int normal = buffer.getInt(readPos); // Fetch first normal for pre-selecting the vertex sink
-
+        for (int quadIdx = 0; quadIdx < numQuads; quadIdx++) {
+            final int normal = buffer.getInt((quadIdx << 2) << 5);
             final Direction dir = normal != -1 ? Direction.values()[normal] : null;
             final ModelQuadFacing facing = dir != null ? ModelQuadFacing.fromDirection(dir) : ModelQuadFacing.UNASSIGNED;
+            sideCount[facing.ordinal()]++;
+        }
+
+        for (final ModelQuadFacing facing : facings) {
+            final int count = sideCount[facing.ordinal()];
+            if (count == 0) {
+                continue;
+            }
+            buffers.getSink(facing).ensureCapacity(count << 2);
+        }
+
+        final int byteSize = currentVertex << 5;
+        byte sideMask = 0;
+
+        buffer.rewind();
+
+        while (buffer.position() < byteSize) {
+            final int normal = buffer.getInt(); // Fetch first normal for pre-selecting the vertex sink
+            final Direction dir = normal != -1 ? Direction.values()[normal] : null;
+            final ModelQuadFacing facing = dir != null ? ModelQuadFacing.fromDirection(dir) : ModelQuadFacing.UNASSIGNED;
+            final int facingIdx = facing.ordinal();
+
             final ModelVertexSink sink = buffers.getSink(facing);
 
-            sink.ensureCapacity(++sideCount[normal] << 2);
+            writeQuadVertex(sink);
+            buffer.getInt();
+            writeQuadVertex(sink);
+            buffer.getInt();
+            writeQuadVertex(sink);
+            buffer.getInt();
+            writeQuadVertex(sink);
 
-            writeQuadVertex(sink, readPos, 0);
-            writeQuadVertex(sink, readPos, 1);
-            writeQuadVertex(sink, readPos, 2);
-            writeQuadVertex(sink, readPos, 3);
-
-            sideMask |= 1 << facing.ordinal();
+            sideMask |= 1 << facingIdx;
         }
 
         for (final ModelQuadFacing facing : facings) {
@@ -150,16 +169,14 @@ public final class SinkingVertexBuilder implements IVertexBuilder {
         }
     }
 
-    private void writeQuadVertex(@Nonnull ModelVertexSink sink, int readPos, int quadVertexIdx) {
-        final int readIdx = readPos + (quadVertexIdx << 5);
-
-        final float x = buffer.getFloat(readIdx + 4);
-        final float y = buffer.getFloat(readIdx + 8);
-        final float z = buffer.getFloat(readIdx + 12);
-        final float u = buffer.getFloat(readIdx + 16);
-        final float v = buffer.getFloat(readIdx + 20);
-        final int color = buffer.getInt(readIdx + 24);
-        final int light = buffer.getInt(readIdx + 28);
+    private void writeQuadVertex(@Nonnull ModelVertexSink sink) {
+        final float x = buffer.getFloat();
+        final float y = buffer.getFloat();
+        final float z = buffer.getFloat();
+        final float u = buffer.getFloat();
+        final float v = buffer.getFloat();
+        final int color = buffer.getInt();
+        final int light = buffer.getInt();
 
         sink.writeQuad(x, y, z, color, u, v, light);
     }
