@@ -5,7 +5,6 @@ import com.mojang.blaze3d.vertex.IVertexBuilder;
 import me.jellysquid.mods.sodium.client.model.quad.properties.ModelQuadFacing;
 import me.jellysquid.mods.sodium.client.render.chunk.compile.buffers.ChunkModelBuffers;
 import me.jellysquid.mods.sodium.client.render.chunk.format.ModelVertexSink;
-import net.minecraft.util.Direction;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -22,24 +21,18 @@ import java.nio.ByteOrder;
 @OnlyIn(Dist.CLIENT)
 public final class SinkingVertexBuilder implements IVertexBuilder {
     private static final ThreadLocal<SinkingVertexBuilder> instance = ThreadLocal.withInitial(SinkingVertexBuilder::new);
+    private static final int vertexStride = 40;
 
-    private final ByteBuffer quadBuffer = ByteBuffer.allocateDirect(160).order(ByteOrder.nativeOrder());
+    private final ByteBuffer buffer = ByteBuffer.allocateDirect(2097152).order(ByteOrder.nativeOrder());
+    private int currentVertex;
 
     private float x;
     private float y;
     private float z;
-    private float nx;
-    private float ny;
-    private float nz;
     private float u;
     private float v;
     private int color;
     private int light;
-
-    private int currentQuad;
-    private int currentQuadVertexIndex;
-    private byte sideMask;
-    private ChunkModelBuffers buffers;
 
     @Nonnull
     public static SinkingVertexBuilder getInstance() {
@@ -86,88 +79,57 @@ public final class SinkingVertexBuilder implements IVertexBuilder {
     @Nonnull
     @Override
     public IVertexBuilder normal(float x, float y, float z) {
-        nx = x;
-        ny = y;
-        nz = z;
         return this;
     }
 
     @Override
     public void endVertex() {
-        quadBuffer.putFloat(x);
-        quadBuffer.putFloat(y);
-        quadBuffer.putFloat(z);
-        quadBuffer.putFloat(u);
-        quadBuffer.putFloat(v);
-        quadBuffer.putInt(color);
-        quadBuffer.putInt(light);
-
-        if (currentQuadVertexIndex == 3) {
-            quadBuffer.rewind();
-            sideMask |= writeQuad();
-            quadBuffer.clear();
-            quadBuffer.rewind();
-
-            currentQuad++;
-            currentQuadVertexIndex = 0;
-        }
-        else {
-            currentQuadVertexIndex++;
-        }
+        buffer.putFloat(x);
+        buffer.putFloat(y);
+        buffer.putFloat(z);
+        buffer.putFloat(u);
+        buffer.putFloat(v);
+        buffer.putInt(color);
+        buffer.putInt(light);
 
         resetCurrentVertex();
+        currentVertex++;
     }
 
     public void reset() {
-        currentQuad = 0;
-        currentQuadVertexIndex = 0;
-        sideMask = 0;
-        buffers = null;
+        buffer.rewind();
+
         resetCurrentVertex();
+        currentVertex = 0;
     }
 
-    public void setBuffers(@Nonnull ChunkModelBuffers buffers) {
-        this.buffers = buffers;
-    }
+    public void flush(@Nonnull ChunkModelBuffers buffers) {
+        final ModelVertexSink sink = buffers.getSink(ModelQuadFacing.UNASSIGNED);
 
-    public void flush() {
-        for (final ModelQuadFacing facing : ModelQuadFacing.values()) {
-            if ((sideMask >> facing.ordinal() & 1) == 0) {
-                continue;
-            }
+        sink.ensureCapacity(currentVertex);
+        buffer.rewind();
 
-            buffers.getSink(facing).flush();
+        for (int i = 0; i < currentVertex; i++) {
+            writeQuadVertex(sink);
         }
-    }
 
-    private byte writeQuad() {
-        final Direction dir = Direction.fromNormal((int) nx, (int) ny, (int) nz);
-        final ModelQuadFacing facing = dir != null ? ModelQuadFacing.fromDirection(dir) : ModelQuadFacing.UNASSIGNED;
-        final ModelVertexSink sink = buffers.getSink(facing);
-
-        sink.ensureCapacity((currentQuad + 1) << 2);
-        writeQuadVertex(sink);
-        writeQuadVertex(sink);
-        writeQuadVertex(sink);
-        writeQuadVertex(sink);
-
-        return (byte) (1 << facing.ordinal());
+        sink.flush();
     }
 
     private void writeQuadVertex(@Nonnull ModelVertexSink sink) {
-        final float x = quadBuffer.getFloat();
-        final float y = quadBuffer.getFloat();
-        final float z = quadBuffer.getFloat();
-        final float u = quadBuffer.getFloat();
-        final float v = quadBuffer.getFloat();
-        final int color = quadBuffer.getInt();
-        final int light = quadBuffer.getInt();
+        final float x = buffer.getFloat();
+        final float y = buffer.getFloat();
+        final float z = buffer.getFloat();
+        final float u = buffer.getFloat();
+        final float v = buffer.getFloat();
+        final int color = buffer.getInt();
+        final int light = buffer.getInt();
+
         sink.writeQuad(x, y, z, color, u, v, light);
     }
 
     private void resetCurrentVertex() {
         x = y = z = 0F;
-        nx = ny = nz = 0F;
         u = v = 0F;
         color = 0xFFFF_FFFF;
         light = 0;

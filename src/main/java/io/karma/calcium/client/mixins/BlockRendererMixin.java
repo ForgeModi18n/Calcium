@@ -39,9 +39,8 @@ public class BlockRendererMixin {
                 mStack.clear();
 
                 builder.reset();
-                builder.setBuffers(buffers);
                 cbi.setReturnValue(renderer.renderBlock(state, pos, world, mStack, builder, random, modelData));
-                builder.flush();
+                builder.flush(buffers);
 
                 cbi.cancel();
             }
