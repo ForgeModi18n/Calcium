@@ -31,7 +31,7 @@ public class BlockRendererMixin {
 
     @Inject(method = "renderModel", at = @At(value = "INVOKE_ASSIGN", target = "Lnet/minecraft/client/renderer/model/IBakedModel;getModelData(Lnet/minecraft/world/IBlockDisplayReader;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;Lnet/minecraftforge/client/model/data/IModelData;)Lnet/minecraftforge/client/model/data/IModelData;"), cancellable = true)
     private void onRenderModel(IBlockDisplayReader world, BlockState state, BlockPos pos, IBakedModel model, ChunkModelBuffers buffers, boolean cull, long seed, IModelData modelData, @Nonnull CallbackInfoReturnable<Boolean> cbi) {
-        for (final ICCBlockRenderer renderer : CalciumMod.getCustomRenderers()) {
+        for (final ICCBlockRenderer renderer : CalciumMod.getCustomRenderers(world, pos)) {
             if (renderer.canHandleBlock(world, pos, state)) {
                 final MatrixStack mStack = matrixStack.get();
                 final SinkingVertexBuilder builder = SinkingVertexBuilder.getInstance();
