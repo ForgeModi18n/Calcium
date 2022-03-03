@@ -25,8 +25,8 @@ import java.util.Random;
 
 @Mixin(value = BlockRenderer.class, remap = false)
 public final class BlockRendererMixin {
-    private static final ThreadLocal<MatrixStack> matrixStack = ThreadLocal.withInitial(MatrixStack::new);
-    private final CCLModule calciumModule = CAModuleManager.<CCLModule>getModule("ccl").orElseThrow(() -> new RuntimeException("Could not retrieve module"));
+    private final ThreadLocal<MatrixStack> matrixStack = ThreadLocal.withInitial(MatrixStack::new);
+    private final CCLModule cclModule = CAModuleManager.<CCLModule>getModule("ccl").orElseThrow(() -> new RuntimeException("Could not retrieve module"));
 
     //@formatter:off
     @Shadow @Final private Random random;
@@ -37,7 +37,7 @@ public final class BlockRendererMixin {
         final MatrixStack mStack = matrixStack.get();
         final SinkingVertexBuilder builder = SinkingVertexBuilder.getInstance();
 
-        for (final ICCBlockRenderer renderer : calciumModule.getCustomRenderers(world, pos)) {
+        for (final ICCBlockRenderer renderer : cclModule.getCustomRenderers(world, pos)) {
             if (renderer.canHandleBlock(world, pos, state)) {
                 mStack.clear();
 

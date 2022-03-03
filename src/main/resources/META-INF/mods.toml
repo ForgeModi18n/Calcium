@@ -56,17 +56,3 @@ A compatibility patch between CodeChickenLib and Magnesium/Halogen.
     mandatory=false
     ordering="AFTER"
     side="CLIENT"
-
-[[dependencies.calcium]]
-    modId="zerocore"
-    versionRange="[1.16.5-2.1.9,)"
-    mandatory=false
-    ordering="AFTER"
-    side="CLIENT"
-
-[[dependencies.calcium]]
-    modId="bigreactors"
-    versionRange="[1.16.5-2.0.38,)"
-    mandatory=false
-    ordering="AFTER"
-    side="CLIENT"

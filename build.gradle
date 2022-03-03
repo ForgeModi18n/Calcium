@@ -27,7 +27,7 @@ apply plugin: 'eclipse'
 apply plugin: 'java'
 apply plugin: 'maven-publish'
 
-version = "${config.project_version}.${config.project_build_number}"
+version = "${config.project_version}.${(System.getenv("CI_PIPELINE_IID") ?: 0)}"
 group = config.project_group
 archivesBaseName = "${config.project_name}-${config.mc_version}"
 sourceCompatibility = config.java_version
@@ -115,9 +115,6 @@ dependencies {
     implementation fg.deobf(group: 'curse.maven', name: 'mantle-74924', version: config.mantle_version)
     implementation fg.deobf(group: 'curse.maven', name: 'tinkers-construct-74072', version: config.tconstruct_version)
 
-    implementation fg.deobf(group: 'curse.maven', name: 'zerocore-247921', version: config.zerocore_version)
-    implementation fg.deobf(group: 'curse.maven', name: 'extreme-reactors-250277', version: config.xreactors_version)
-
     runtimeOnly group: 'net.minecraftforge', name: 'Scorge', version: config.scorge_version
     runtimeOnly fg.deobf(group: 'codechicken', name: 'CBMultipart', version: "${config.mc_version}-${config.cbm_version}", classifier: 'deobf')
 
@@ -138,7 +135,7 @@ jar {
     manifest {
         attributes([
                 //@formatter:off
-                'MixinConfigs':             "mixins.${config.project_id}.ccl.json,mixins.${config.project_id}.tic.json,mixins.${config.project_id}.zerocore.json",
+                'MixinConfigs':             "mixins.${config.project_id}.json,mixins.${config.project_id}.ccl.json,mixins.${config.project_id}.tic.json",
                 'Specification-Title': 		config.project_name,
                 'Specification-Vendor': 	'Karma Krafts',
                 'Specification-Version': 	'1',
@@ -181,7 +178,7 @@ publishing {
         }
     }
     publications {
-        ProjectX(MavenPublication) {
+        calcium(MavenPublication) {
             groupId project.group
             artifactId project.archivesBaseName
             version project.version

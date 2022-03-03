@@ -7,6 +7,7 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.loading.FMLLoader;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -42,7 +43,7 @@ public final class CAModuleManager {
             }
 
             final String moduleClassName = entry.getValue();
-            CalciumMod.LOGGER.info("Found mod '{}', loading patch module {}", modId, moduleClassName);
+            CalciumMod.LOGGER.info("Oh hi there {}, loading patch module {}", modId, moduleClassName);
 
             try {
                 final Class<?> clazz = Class.forName(moduleClassName);
@@ -55,7 +56,18 @@ public final class CAModuleManager {
                 modules.put(module.getId(), module);
             }
             catch (final @NotNull Throwable t) {
-                CalciumMod.LOGGER.error("Could not load module {} - {}", moduleClassName, t.getMessage());
+                final StringBuilder builder = new StringBuilder();
+                builder.append(t.getMessage())
+                        .append('\n');
+                builder.append('\n');
+
+                // @formatter:off
+                Arrays.stream(t.getStackTrace())
+                    .map(StackTraceElement::toString)
+                    .forEach(builder::append);
+                // @formatter:on
+
+                CalciumMod.LOGGER.error("Could not load module {} - {}", moduleClassName, builder);
             }
         }
     }

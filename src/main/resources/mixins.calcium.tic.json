@@ -7,6 +7,7 @@
   "refmap": "mixins.refmap.calcium.json",
   "plugin": "io.karma.calcium.client.module.tic.TiCMixinConfigPlugin",
   "client": [
-    "FluidTextureModelMixin"
+    "BakedFluidTextureModelMixin",
+    "FluidTextureModelLoaderMixin"
   ]
 }
