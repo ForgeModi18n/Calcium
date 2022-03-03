@@ -121,14 +121,10 @@ public abstract class BlockRendererMixin {
             final Direction direction = quad.getDirection();
             final boolean hasAmbientOcclusion = quad.isShade();
 
+            final IBlockColor colorProvider = blockColors.getColorProvider(state);
             final QuadLightData lightData = cachedQuadLightData;
+
             lightPipeline.calculate((ModelQuadView) quad, pos, lightData, direction, hasAmbientOcclusion);
-            IBlockColor colorProvider = blockColors.getColorProvider(state);
-
-            if (colorProvider == null) {
-                colorProvider = DEFAULT_COLOR_PROVIDER;
-            }
-
             renderQuad(world, state, pos, sink, offset, colorProvider, quad, lightData, renderData);
         }
 
@@ -160,7 +156,7 @@ public abstract class BlockRendererMixin {
 
             int c = ColorABGR.mul(quadView.getColor(srcIndex), lightData.br[srcIndex]);
 
-            if (bakedQuad.isTinted()) {
+            if (bakedQuad.isTinted() && biomeVertexColors != null) {
                 final int bcm = biomeVertexColors[srcIndex];
                 final float bcmR = (float) ColorABGR.unpackRed(bcm) / 255F;
                 final float bcmG = (float) ColorABGR.unpackGreen(bcm) / 255F;
