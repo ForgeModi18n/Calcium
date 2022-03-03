@@ -1,9 +1,10 @@
-package io.karma.calcium.client.mixins;
+package io.karma.calcium.client.module.ccl.mixins;
 
 import codechicken.lib.render.block.ICCBlockRenderer;
 import com.mojang.blaze3d.matrix.MatrixStack;
-import io.karma.calcium.CalciumMod;
-import io.karma.calcium.client.render.SinkingVertexBuilder;
+import io.karma.calcium.client.module.CAModuleManager;
+import io.karma.calcium.client.module.ccl.CCLModule;
+import io.karma.calcium.client.module.ccl.SinkingVertexBuilder;
 import me.jellysquid.mods.sodium.client.render.chunk.compile.buffers.ChunkModelBuffers;
 import me.jellysquid.mods.sodium.client.render.pipeline.BlockRenderer;
 import net.minecraft.block.BlockState;
@@ -23,8 +24,9 @@ import javax.annotation.Nonnull;
 import java.util.Random;
 
 @Mixin(value = BlockRenderer.class, remap = false)
-public class BlockRendererMixin {
+public final class BlockRendererMixin {
     private static final ThreadLocal<MatrixStack> matrixStack = ThreadLocal.withInitial(MatrixStack::new);
+    private final CCLModule calciumModule = CAModuleManager.<CCLModule>getModule("ccl").orElseThrow(() -> new RuntimeException("Could not retrieve module"));
 
     //@formatter:off
     @Shadow @Final private Random random;
@@ -35,7 +37,7 @@ public class BlockRendererMixin {
         final MatrixStack mStack = matrixStack.get();
         final SinkingVertexBuilder builder = SinkingVertexBuilder.getInstance();
 
-        for (final ICCBlockRenderer renderer : CalciumMod.getCustomRenderers(world, pos)) {
+        for (final ICCBlockRenderer renderer : calciumModule.getCustomRenderers(world, pos)) {
             if (renderer.canHandleBlock(world, pos, state)) {
                 mStack.clear();
 

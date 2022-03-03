@@ -1,0 +1,12 @@
+{
+  "package": "io.karma.calcium.client.module.ccl.mixins",
+  "required": false,
+  "target": "@env(DEFAULT)",
+  "compatibilityLevel": "JAVA_8",
+  "minVersion": "0.8",
+  "refmap": "mixins.refmap.calcium.json",
+  "plugin": "io.karma.calcium.client.module.ccl.CCLMixinConfigPlugin",
+  "client": [
+    "BlockRendererMixin"
+  ]
+}

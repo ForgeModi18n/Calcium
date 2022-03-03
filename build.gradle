@@ -1,37 +1,41 @@
 buildscript {
-    def buildConfig = new Properties()
+    def config = new Properties()
     project.ext.buildConfigFile = file('build.properties')
-    buildConfigFile.withInputStream(buildConfig.&load)
-    project.ext.buildConfig = buildConfig
+    buildConfigFile.withInputStream(config.&load)
+    project.ext.config = config
     project.ext.buildDate = new Date()
 
     repositories {
         maven { url = 'https://files.minecraftforge.net/maven' }
         maven { url = 'https://repo.spongepowered.org/maven' }
+        maven { url = 'https://maven.parchmentmc.org' }
         mavenCentral()
         google()
     }
 
     dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: buildConfig.forge_gradle_version, changing: false
-        classpath group: 'org.spongepowered', name: 'mixingradle', version: buildConfig.mixin_gradle_version
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: config.forge_gradle_version, changing: false
+        classpath group: 'org.parchmentmc', name: 'librarian', version: config.librarian_version
+        classpath group: 'org.spongepowered', name: 'mixingradle', version: config.mixin_gradle_version
     }
 }
 
 apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'org.parchmentmc.librarian.forgegradle'
 apply plugin: 'org.spongepowered.mixin'
 apply plugin: 'eclipse'
 apply plugin: 'java'
 apply plugin: 'maven-publish'
 
-version = "${buildConfig.project_version}.${buildConfig.project_build_number}"
-group = "io.karma.${buildConfig.project_id}"
-archivesBaseName = "${buildConfig.project_name}-${buildConfig.mc_version}"
-java.toolchain.languageVersion = JavaLanguageVersion.of(buildConfig.java_version)
+version = "${config.project_version}.${config.project_build_number}"
+group = config.project_group
+archivesBaseName = "${config.project_name}-${config.mc_version}"
+sourceCompatibility = config.java_version
+targetCompatibility = config.java_version
 
 minecraft {
-    mappings channel: 'official', version: buildConfig.mc_version as String
-    accessTransformer = file("src/main/resources/META-INF/${buildConfig.project_id}_at.cfg")
+    mappings channel: 'parchment', version: "${config.parchment_version}-${config.mc_version}"
+    accessTransformer = file("src/main/resources/META-INF/${config.project_id}_at.cfg")
 
     runs {
         client {
@@ -72,7 +76,7 @@ minecraft {
             property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
             jvmArgs '-Xms256M', '-Xmx2048M'
 
-            args '--mod', buildConfig.project_id, '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
+            args '--mod', config.project_id, '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
 
             mods {
                 calcium {
@@ -86,19 +90,13 @@ minecraft {
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 mixin {
-    add sourceSets.main, "mixins.refmap.${buildConfig.project_id}.json"
+    add sourceSets.main, "mixins.refmap.${config.project_id}.json"
 }
 
 repositories {
-    maven {
-        url = 'https://cursemaven.com'
-
-        content {
-            includeGroup 'curse.maven'
-        }
-    }
-
-    maven { url = 'https://chickenbones.net/maven' }
+    maven { url = 'https://maven.parchmentmc.org' }
+    maven { url = 'https://maven.covers1624.net' }
+    maven { url = 'https://cursemaven.com' }
     maven { url = 'https://thedarkcolour.github.io/KotlinForForge' }
     maven { url = 'https://dvs1.progwml6.com/files/maven' }
     maven { url = 'https://repo.spongepowered.org/maven' }
@@ -107,18 +105,27 @@ repositories {
 }
 
 dependencies {
-    minecraft group: 'net.minecraftforge', name: 'forge', version: "${buildConfig.mc_version}-${buildConfig.forge_version}"
+    minecraft group: 'net.minecraftforge', name: 'forge', version: "${config.mc_version}-${config.forge_version}"
 
-    implementation group: 'codechicken', name: 'CodeChickenLib', version: "${buildConfig.mc_version}-${buildConfig.ccl_version}", classifier: 'deobf'
-    implementation fg.deobf("curse.maven:sodium-reforged-532724:${buildConfig.magnesium_version}")
+    implementation group: 'org.jetbrains', name: 'annotations', version: config.annotations_version
 
-    runtimeOnly group: 'net.minecraftforge', name: 'Scorge', version: buildConfig.scorge_version
-    runtimeOnly group: 'codechicken', name: 'CBMultipart', version: "${buildConfig.mc_version}-${buildConfig.cbm_version}", classifier: 'deobf'
-    runtimeOnly group: 'mrtjp', name: 'ProjectRed', version: "${buildConfig.mc_version}-${buildConfig.pr_version}", classifier: 'core'
-    runtimeOnly group: 'mrtjp', name: 'ProjectRed', version: "${buildConfig.mc_version}-${buildConfig.pr_version}", classifier: 'exploration'
-    runtimeOnly group: 'mrtjp', name: 'ProjectRed', version: "${buildConfig.mc_version}-${buildConfig.pr_version}", classifier: 'transmission'
-    runtimeOnly group: 'mrtjp', name: 'ProjectRed', version: "${buildConfig.mc_version}-${buildConfig.pr_version}", classifier: 'illumination'
-    runtimeOnly group: 'mrtjp', name: 'ProjectRed', version: "${buildConfig.mc_version}-${buildConfig.pr_version}", classifier: 'integration'
+    implementation fg.deobf(group: 'codechicken', name: 'CodeChickenLib', version: "${config.mc_version}-${config.ccl_version}", classifier: 'deobf')
+    implementation fg.deobf(group: 'curse.maven', name: 'sodium-reforged-532724', version: config.magnesium_version)
+
+    implementation fg.deobf(group: 'curse.maven', name: 'mantle-74924', version: config.mantle_version)
+    implementation fg.deobf(group: 'curse.maven', name: 'tinkers-construct-74072', version: config.tconstruct_version)
+
+    implementation fg.deobf(group: 'curse.maven', name: 'zerocore-247921', version: config.zerocore_version)
+    implementation fg.deobf(group: 'curse.maven', name: 'extreme-reactors-250277', version: config.xreactors_version)
+
+    runtimeOnly group: 'net.minecraftforge', name: 'Scorge', version: config.scorge_version
+    runtimeOnly fg.deobf(group: 'codechicken', name: 'CBMultipart', version: "${config.mc_version}-${config.cbm_version}", classifier: 'deobf')
+
+    runtimeOnly fg.deobf(group: 'mrtjp', name: 'ProjectRed', version: "${config.mc_version}-${config.pr_version}", classifier: 'core')
+    runtimeOnly fg.deobf(group: 'mrtjp', name: 'ProjectRed', version: "${config.mc_version}-${config.pr_version}", classifier: 'exploration')
+    runtimeOnly fg.deobf(group: 'mrtjp', name: 'ProjectRed', version: "${config.mc_version}-${config.pr_version}", classifier: 'transmission')
+    runtimeOnly fg.deobf(group: 'mrtjp', name: 'ProjectRed', version: "${config.mc_version}-${config.pr_version}", classifier: 'illumination')
+    runtimeOnly fg.deobf(group: 'mrtjp', name: 'ProjectRed', version: "${config.mc_version}-${config.pr_version}", classifier: 'integration')
 }
 
 configurations {
@@ -131,14 +138,14 @@ jar {
     manifest {
         attributes([
                 //@formatter:off
-                'Specification-Title': 		buildConfig.project_name,
+                'MixinConfigs':             "mixins.${config.project_id}.ccl.json,mixins.${config.project_id}.tic.json,mixins.${config.project_id}.zerocore.json",
+                'Specification-Title': 		config.project_name,
                 'Specification-Vendor': 	'Karma Krafts',
                 'Specification-Version': 	'1',
-                'Implementation-Title': 	buildConfig.project_name,
+                'Implementation-Title': 	config.project_name,
                 'Implementation-Version': 	project.version,
                 'Implementation-Vendor': 	'Karma Krafts',
-                'Implementation-Timestamp': buildDate.format("yyyy-MM-dd'T'HH:mm:ssZ"),
-                'MixinConfigs':             "mixins.client.${buildConfig.project_id}.json"
+                'Implementation-Timestamp': buildDate.format("yyyy-MM-dd'T'HH:mm:ssZ")
                 //@formatter:on
         ])
     }
@@ -155,28 +162,28 @@ artifacts {
 }
 
 tasks.withType(JavaCompile) {
-    sourceCompatibility = buildConfig.java_version
-    targetCompatibility = buildConfig.java_version
+    sourceCompatibility = config.java_version
+    targetCompatibility = config.java_version
     options.encoding = 'UTF-8'
 }
 
 publishing {
     repositories {
-        if (System.getenv('MAVEN_PASS')) {
+        if (System.getenv('MAVEN_PASSWORD')) {
             maven {
                 url "https://nexus.covers1624.net/repository/karmakrafts-releases/"
 
                 credentials {
                     username 'kitsunealex'
-                    password System.getenv('MAVEN_PASS')
+                    password System.getenv('MAVEN_PASSWORD')
                 }
             }
         }
     }
     publications {
-        Calcium(MavenPublication) {
+        ProjectX(MavenPublication) {
             groupId project.group
-            artifactId archivesBaseName
+            artifactId project.archivesBaseName
             version project.version
             artifact jar
             artifact sourcesJar
@@ -184,22 +191,21 @@ publishing {
             pom {
                 name = archivesBaseName
                 description = archivesBaseName
-                //The publish plugin doesnt like GString's here apparently..
-                url = "https://git.karmakrafts.dev/kk/mc-mods/${buildConfig.project_id}".toString()
+                url = "https://git.karmakrafts.dev/kk/mc-projects/${config.project_id}".toString()
 
                 scm {
-                    url = "https://git.karmakrafts.dev/kk/mc-mods/${buildConfig.project_id}".toString()
+                    url = "https://git.karmakrafts.dev/kk/mc-projects/${config.project_id}".toString()
                 }
 
                 issueManagement {
                     system = 'gitlab'
-                    url = "https://git.karmakrafts.dev/kk/mc-mods/${buildConfig.project_id}/issues".toString()
+                    url = "https://git.karmakrafts.dev/kk/mc-projects/${config.project_id}/issues".toString()
                 }
 
                 licenses {
                     license {
                         name = "The MIT License"
-                        url = "https://git.karmakrafts.dev/kk/mc-mods/${buildConfig.project_id}/-/blob/master/LICENSE"
+                        url = "https://git.karmakrafts.dev/kk/mc-projects/${config.project_id}/-/blob/master/LICENSE"
                         distribution = 'repo'
                     }
                 }

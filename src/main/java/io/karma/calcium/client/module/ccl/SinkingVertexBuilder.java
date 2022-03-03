@@ -1,4 +1,4 @@
-package io.karma.calcium.client.render;
+package io.karma.calcium.client.module.ccl;
 
 import codechicken.lib.colour.Colour;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
