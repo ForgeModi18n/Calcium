@@ -76,7 +76,6 @@ public abstract class BlockRendererMixin {
 
         final LightMode lightMode = getLightingMode(state, model);
         final LightPipeline lightPipeline = lighters.getLighter(lightMode);
-        final Vector3d offset = state.getOffset(world, pos);
 
         final Direction[] directions = DirectionUtil.ALL_DIRECTIONS;
         final int numDirections = directions.length;
@@ -88,7 +87,7 @@ public abstract class BlockRendererMixin {
             random.setSeed(seed);
             final List<BakedQuad> quads = model.getQuads(state, direction, random, modelData);
 
-            if (quads.isEmpty()) {
+            if (quads.isEmpty() || (cull && !occlusionCache.shouldDrawSide(state, world, pos, direction))) {
                 continue;
             }
 
