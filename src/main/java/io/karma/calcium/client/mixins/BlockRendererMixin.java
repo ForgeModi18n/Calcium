@@ -16,6 +16,7 @@ import me.jellysquid.mods.sodium.client.render.pipeline.BlockRenderer;
 import me.jellysquid.mods.sodium.client.util.color.ColorABGR;
 import me.jellysquid.mods.sodium.client.world.biome.BlockColorsExtended;
 import me.jellysquid.mods.sodium.common.util.DirectionUtil;
+import net.minecraft.block.AbstractBlock.OffsetType;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.renderer.color.IBlockColor;
 import net.minecraft.client.renderer.model.BakedQuad;
@@ -23,6 +24,7 @@ import net.minecraft.client.renderer.model.IBakedModel;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.IBlockDisplayReader;
 import net.minecraftforge.client.model.data.IModelData;
@@ -32,15 +34,17 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Redirect;
 
 import java.util.List;
 import java.util.Random;
 
 @Mixin(value = BlockRenderer.class, remap = false, priority = 999)
 public abstract class BlockRendererMixin {
-    private static final IBlockColor DEFAULT_COLOR_PROVIDER = (s, w, p, i) -> 0xFFFFFFFF;
-
     // @formatter:off
+    @Unique private static final int[] DEFAULT_VERTEX_COLORS = { 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF };
     @Shadow @Final private BiomeColorBlender biomeColorBlender;
     @Shadow @Final private BlockColorsExtended blockColors;
     @Shadow @Final private QuadLightData cachedQuadLightData;
@@ -64,6 +68,12 @@ public abstract class BlockRendererMixin {
     ) { // @formatter:on
         modelData = model.getModelData(world, pos, state, modelData);
 
+        final OffsetType offsetType = state.getBlock().getOffsetType();
+        final long posSeed = MathHelper.getSeed(pos.getX(), 0, pos.getZ());
+        final float xOffset = offsetType != OffsetType.NONE ? (((float) (posSeed & 15L) / 15F) - 0.5F) * 0.5F : 0F;
+        final float yOffset = offsetType == OffsetType.XYZ ? (((float) (posSeed >> 4L & 15L) / 15F) - 1F) * 0.2F : 0F;
+        final float zOffset = offsetType != OffsetType.NONE ? (((float) (posSeed >> 8L & 15L) / 15F) - 0.5F) * 0.5F : 0F;
+
         final LightMode lightMode = getLightingMode(state, model);
         final LightPipeline lightPipeline = lighters.getLighter(lightMode);
         final Vector3d offset = state.getOffset(world, pos);
@@ -83,7 +93,7 @@ public abstract class BlockRendererMixin {
             }
 
             final ModelQuadFacing quadFacing = ModelQuadFacing.fromDirection(direction);
-            renderQuadList(world, state, pos, lightPipeline, offset, buffers, quads, quadFacing);
+            renderQuadListFast(world, state, pos, lightPipeline, xOffset, yOffset, zOffset, buffers, quads, quadFacing);
             isRendered = true;
         }
 
@@ -91,21 +101,62 @@ public abstract class BlockRendererMixin {
         final List<BakedQuad> quads = model.getQuads(state, null, random, modelData);
 
         if (!quads.isEmpty()) {
-            renderQuadList(world, state, pos, lightPipeline, offset, buffers, quads, ModelQuadFacing.UNASSIGNED);
+            renderQuadListFast(world, state, pos, lightPipeline, xOffset, yOffset, zOffset, buffers, quads, ModelQuadFacing.UNASSIGNED);
             isRendered = true;
         }
 
         return isRendered;
     }
 
-    @SuppressWarnings("all")
-    @Overwrite
-    private void renderQuadList( // @formatter:off
+    @Redirect(method = "renderQuadList", at = @At("HEAD"))
+    private void newRenderQuadList( // @formatter:off
         final @NotNull IBlockDisplayReader world,
         final @NotNull BlockState state,
         final @NotNull BlockPos pos,
         final @NotNull LightPipeline lightPipeline,
         final @NotNull Vector3d offset,
+        final @NotNull ChunkModelBuffers buffers,
+        final @NotNull List<BakedQuad> quads,
+        final @Nullable ModelQuadFacing facing
+    ) { // @formatter:on
+        final float xo = (float) offset.x;
+        final float yo = (float) offset.y;
+        final float zo = (float) offset.z;
+        renderQuadListFast(world, state, pos, lightPipeline, xo, yo, zo, buffers, quads, facing);
+    }
+
+    @Redirect(method = "renderQuad", at = @At("HEAD"))
+    private void newRenderQuad( // @formatter:off
+        final @NotNull IBlockDisplayReader world,
+        final @NotNull BlockState state,
+        final @NotNull BlockPos pos,
+        final @NotNull ModelVertexSink sink,
+        final @NotNull Vector3d offset,
+        final @NotNull IBlockColor colorProvider,
+        final @NotNull BakedQuad bakedQuad,
+        final @NotNull QuadLightData lightData,
+        final @NotNull Builder renderData
+    ) { // @formatter:on
+        final float xo = (float) offset.x;
+        final float yo = (float) offset.y;
+        final float zo = (float) offset.z;
+        renderQuadFast(world, state, pos, sink, xo, yo, zo, colorProvider, bakedQuad, lightData, renderData);
+    }
+
+    // @formatter:off
+    @Shadow protected abstract @NotNull LightMode getLightingMode(final @NotNull BlockState state, final @NotNull IBakedModel model);
+    // @formatter:on
+
+    @Unique
+    @SuppressWarnings("deprecation")
+    private void renderQuadListFast( // @formatter:off
+        final @NotNull IBlockDisplayReader world,
+        final @NotNull BlockState state,
+        final @NotNull BlockPos pos,
+        final @NotNull LightPipeline lightPipeline,
+        final float xOffset,
+        final float yOffset,
+        final float zOffset,
         final @NotNull ChunkModelBuffers buffers,
         final @NotNull List<BakedQuad> quads,
         final @Nullable ModelQuadFacing facing
@@ -125,20 +176,21 @@ public abstract class BlockRendererMixin {
             final QuadLightData lightData = cachedQuadLightData;
 
             lightPipeline.calculate((ModelQuadView) quad, pos, lightData, direction, hasAmbientOcclusion);
-            renderQuad(world, state, pos, sink, offset, colorProvider, quad, lightData, renderData);
+            renderQuadFast(world, state, pos, sink, xOffset, yOffset, zOffset, colorProvider, quad, lightData, renderData);
         }
 
         sink.flush();
     }
 
-    @SuppressWarnings("all")
-    @Overwrite
-    private void renderQuad( // @formatter:off
+    @Unique
+    private void renderQuadFast( // @formatter:off
         final @NotNull IBlockDisplayReader world,
         final @NotNull BlockState state,
         final @NotNull BlockPos pos,
         final @NotNull ModelVertexSink sink,
-        final @NotNull Vector3d offset,
+        final float xOffset,
+        final float yOffset,
+        final float zOffset,
         final @NotNull IBlockColor colorProvider,
         final @NotNull BakedQuad bakedQuad,
         final @NotNull QuadLightData lightData,
@@ -146,23 +198,25 @@ public abstract class BlockRendererMixin {
     ) { // @formatter:on
         final ModelQuadView quadView = (ModelQuadView) bakedQuad;
         final ModelQuadOrientation orientation = ModelQuadOrientation.orient(lightData.br);
-        final int[] biomeVertexColors = biomeColorBlender.getColors(colorProvider, world, state, pos, quadView);
+        int[] vertexBaseColors = biomeColorBlender.getColors(colorProvider, world, state, pos, quadView);
+
+        if (vertexBaseColors == null || !bakedQuad.isTinted()) {
+            vertexBaseColors = DEFAULT_VERTEX_COLORS;
+        }
 
         for (int i = 0; i < 4; i++) {
             final int srcIndex = orientation.getVertexIndex(i);
-            final float x = quadView.getX(srcIndex) + (float) offset.x;
-            final float y = quadView.getY(srcIndex) + (float) offset.y;
-            final float z = quadView.getZ(srcIndex) + (float) offset.z;
+            final float x = quadView.getX(srcIndex) + xOffset;
+            final float y = quadView.getY(srcIndex) + yOffset;
+            final float z = quadView.getZ(srcIndex) + zOffset;
 
             int c = ColorABGR.mul(quadView.getColor(srcIndex), lightData.br[srcIndex]);
 
-            if (bakedQuad.isTinted() && biomeVertexColors != null) {
-                final int bcm = biomeVertexColors[srcIndex];
-                final float bcmR = (float) ColorABGR.unpackRed(bcm) / 255F;
-                final float bcmG = (float) ColorABGR.unpackGreen(bcm) / 255F;
-                final float bcmB = (float) ColorABGR.unpackBlue(bcm) / 255F;
-                c = ColorABGR.mul(c, bcmR, bcmG, bcmB);
-            }
+            final int bcm = vertexBaseColors[srcIndex];
+            final float bcmR = (float) ColorABGR.unpackRed(bcm) / 255F;
+            final float bcmG = (float) ColorABGR.unpackGreen(bcm) / 255F;
+            final float bcmB = (float) ColorABGR.unpackBlue(bcm) / 255F;
+            c = ColorABGR.mul(c, bcmR, bcmG, bcmB);
 
             final float u = quadView.getTexU(srcIndex);
             final float v = quadView.getTexV(srcIndex);
@@ -173,14 +227,14 @@ public abstract class BlockRendererMixin {
 
             if (ql > 0) { // If there is quad-specific lighting data
                 final int qsl = ql & 0xFFFF;
-                final int qbl = (ql << 16) & 0xFFFF;
+                final int qbl = (ql >> 16) & 0xFFFF;
 
                 final int lsl = ll & 0xFFFF;
-                final int lbl = (ll << 16) & 0xFFFF;
+                final int lbl = (ll >> 16) & 0xFFFF;
 
                 final int sl = Math.max(qsl, lsl);
                 final int bl = Math.max(qbl, lbl);
-                l = sl | (bl >> 16);
+                l = sl | (bl << 16);
             }
 
             sink.writeQuad(x, y, z, c, u, v, l);
@@ -192,8 +246,4 @@ public abstract class BlockRendererMixin {
             renderData.addSprite(texture);
         }
     }
-
-    // @formatter:off
-    @Shadow protected abstract @NotNull LightMode getLightingMode(final @NotNull BlockState state, final @NotNull IBakedModel model);
-    // @formatter:on
 }
