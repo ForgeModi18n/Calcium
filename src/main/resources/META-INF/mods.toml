@@ -1,58 +1,58 @@
-modLoader="javafml"
-loaderVersion="[36,)"
-license="The MIT License"
+modLoader = "javafml"
+loaderVersion = "[36,)"
+license = "The MIT License"
 
 [[mods]]
-modId="calcium"
-version="${file.jarVersion}"
-displayName="Calcium"
+modId = "calcium"
+version = "${file.jarVersion}"
+displayName = "Calcium"
 #updateJSONURL=""
-displayURL="https://git.karmakrafts.dev/kk/mc-mods/calcium"
-logoFile="calcium_logo.png"
-credits="Thanks to covers1624 for helping out with the CCL side of things <3"
-authors="KitsuneAlex"
-description='''
+displayURL = "https://git.karmakrafts.dev/kk/mc-mods/calcium"
+logoFile = "calcium_logo.png"
+credits = "Thanks to covers1624 for helping out with the CCL side of things <3"
+authors = "KitsuneAlex"
+description = '''
 A compatibility patch between CodeChickenLib and Magnesium/Halogen.
 '''
 
 [[dependencies.calcium]]
-    modId="forge"
-    mandatory=true
-    versionRange="[36.2.29,)"
-    ordering="NONE"
-    side="CLIENT"
+modId = "forge"
+mandatory = true
+versionRange = "[36.2.29,)"
+ordering = "NONE"
+side = "CLIENT"
 
 [[dependencies.calcium]]
-    modId="minecraft"
-    versionRange="[1.16.5]"
-    mandatory=true
-    ordering="NONE"
-    side="CLIENT"
+modId = "minecraft"
+versionRange = "[1.16.5]"
+mandatory = true
+ordering = "NONE"
+side = "CLIENT"
 
 [[dependencies.calcium]]
-    modId="magnesium"
-    versionRange="[1.4.1.1,)"
-    mandatory=true
-    ordering="BEFORE"
-    side="CLIENT"
+modId = "magnesium"
+versionRange = "[1.4.1.1,)"
+mandatory = true
+ordering = "BEFORE"
+side = "CLIENT"
 
 [[dependencies.calcium]]
-    modId="codechickenlib"
-    versionRange="[4.0.7.444,)"
-    mandatory=false
-    ordering="AFTER"
-    side="CLIENT"
+modId = "codechickenlib"
+versionRange = "[4.0.7.444,)"
+mandatory = false
+ordering = "AFTER"
+side = "CLIENT"
 
 [[dependencies.calcium]]
-    modId="mantle"
-    versionRange="[1.6.157,)"
-    mandatory=false
-    ordering="AFTER"
-    side="CLIENT"
+modId = "mantle"
+versionRange = "[1.6.157,)"
+mandatory = false
+ordering = "AFTER"
+side = "CLIENT"
 
 [[dependencies.calcium]]
-    modId="tconstruct"
-    versionRange="[3.3.3.332,)"
-    mandatory=false
-    ordering="AFTER"
-    side="CLIENT"
+modId = "tconstruct"
+versionRange = "[3.3.3.332,)"
+mandatory = false
+ordering = "AFTER"
+side = "CLIENT"

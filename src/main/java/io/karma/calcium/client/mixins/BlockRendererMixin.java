@@ -35,8 +35,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
 
 import java.util.List;
 import java.util.Random;
@@ -107,8 +105,9 @@ public abstract class BlockRendererMixin {
         return isRendered;
     }
 
-    @Redirect(method = "renderQuadList", at = @At("HEAD"))
-    private void newRenderQuadList( // @formatter:off
+    @SuppressWarnings("all")
+    @Overwrite
+    private void renderQuadList( // @formatter:off
         final @NotNull IBlockDisplayReader world,
         final @NotNull BlockState state,
         final @NotNull BlockPos pos,
@@ -124,8 +123,9 @@ public abstract class BlockRendererMixin {
         renderQuadListFast(world, state, pos, lightPipeline, xo, yo, zo, buffers, quads, facing);
     }
 
-    @Redirect(method = "renderQuad", at = @At("HEAD"))
-    private void newRenderQuad( // @formatter:off
+    @SuppressWarnings("all")
+    @Overwrite
+    private void renderQuad( // @formatter:off
         final @NotNull IBlockDisplayReader world,
         final @NotNull BlockState state,
         final @NotNull BlockPos pos,

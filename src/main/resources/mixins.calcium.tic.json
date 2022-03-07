@@ -8,8 +8,8 @@
   "plugin": "io.karma.calcium.client.module.tic.TiCMixinConfigPlugin",
   "client": [
     "BakedFluidTextureModelMixin",
+    "ConnectedBakedModelMixin",
     "FluidTextureModelLoaderMixin",
-    "RetexturedBakedModelMixin",
-    "ConnectedBakedModelMixin"
+    "RetexturedBakedModelMixin"
   ]
 }
