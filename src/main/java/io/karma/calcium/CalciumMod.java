@@ -26,6 +26,7 @@ public final class CalciumMod {
             LOGGER.info("Loading modules");
             CAModuleManager.registerModule("codechickenlib", "io.karma.calcium.client.module.ccl.CCLModule");
             CAModuleManager.registerModule("tconstruct", "io.karma.calcium.client.module.tic.TiCModule");
+            CAModuleManager.registerModule("ctm", "io.karma.calcium.client.module.ctm.CTMModule");
             CAModuleManager.loadModules();
         });
     }

@@ -56,3 +56,17 @@ versionRange = "[3.3.3.332,)"
 mandatory = false
 ordering = "AFTER"
 side = "CLIENT"
+
+[[dependencies.calcium]]
+modId = "ctm"
+versionRange = "[MC1.16.1-1.1.2.6,)"
+mandatory = false
+ordering = "AFTER"
+side = "CLIENT"
+
+[[dependencies.calcium]]
+modId = "chisel"
+versionRange = "[MC1.16.5-2.0.1-alpha.4,)"
+mandatory = false
+ordering = "AFTER"
+side = "CLIENT"

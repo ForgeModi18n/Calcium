@@ -85,7 +85,7 @@ public abstract class BlockRendererMixin {
             random.setSeed(seed);
             final List<BakedQuad> quads = model.getQuads(state, direction, random, modelData);
 
-            if (quads.isEmpty() || (cull && !occlusionCache.shouldDrawSide(state, world, pos, direction))) {
+            if (quads.isEmpty() || !(!cull || occlusionCache.shouldDrawSide(state, world, pos, direction))) {
                 continue;
             }
 
