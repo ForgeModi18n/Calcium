@@ -18,7 +18,7 @@ A compatibility patch between CodeChickenLib and Magnesium/Halogen.
 [[dependencies.calcium]]
 modId = "forge"
 mandatory = true
-versionRange = "[36.2.29,)"
+versionRange = "[36.2.33,)"
 ordering = "NONE"
 side = "CLIENT"
 
@@ -30,15 +30,15 @@ ordering = "NONE"
 side = "CLIENT"
 
 [[dependencies.calcium]]
-modId = "magnesium"
-versionRange = "[1.4.1.1,)"
+modId = "rubidium"
+versionRange = "[0.2.2,)"
 mandatory = true
 ordering = "BEFORE"
 side = "CLIENT"
 
 [[dependencies.calcium]]
 modId = "codechickenlib"
-versionRange = "[4.0.7.444,)"
+versionRange = "[4.0.7.445,)"
 mandatory = false
 ordering = "AFTER"
 side = "CLIENT"

@@ -1,6 +1,7 @@
 package io.karma.calcium;
 
 import io.karma.calcium.client.module.CAModuleManager;
+import io.karma.calcium.client.util.TextureUtils;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -21,6 +22,8 @@ public final class CalciumMod {
         final IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
 
         DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
+            TextureUtils.init(bus);
+
             bus.addListener(this::onClientSetup);
 
             LOGGER.info("Loading modules");

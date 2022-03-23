@@ -110,13 +110,13 @@ dependencies {
     implementation group: 'org.jetbrains', name: 'annotations', version: config.annotations_version
 
     implementation fg.deobf(group: 'codechicken', name: 'CodeChickenLib', version: "${config.mc_version}-${config.ccl_version}", classifier: 'deobf')
-    implementation fg.deobf(group: 'curse.maven', name: 'sodium-reforged-532724', version: config.magnesium_version)
 
+    implementation fg.deobf(group: 'curse.maven', name: 'rubidium-574856', version: config.rubidium_version)
     implementation fg.deobf(group: 'curse.maven', name: 'mantle-74924', version: config.mantle_version)
     implementation fg.deobf(group: 'curse.maven', name: 'tinkers-construct-74072', version: config.tconstruct_version)
-
     implementation fg.deobf(group: 'curse.maven', name: 'ctm-267602', version: config.ctm_version)
     implementation fg.deobf(group: 'curse.maven', name: 'chisel-235279', version: config.chisel_version)
+    implementation fg.deobf(group: 'curse.maven', name: 'chisels-bits-231095', version: config.cb_version)
 
     runtimeOnly group: 'net.minecraftforge', name: 'Scorge', version: config.scorge_version
     runtimeOnly fg.deobf(group: 'codechicken', name: 'CBMultipart', version: "${config.mc_version}-${config.cbm_version}", classifier: 'deobf')

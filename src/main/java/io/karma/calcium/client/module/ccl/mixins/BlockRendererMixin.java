@@ -17,7 +17,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.At.Shift;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -32,8 +31,10 @@ public final class BlockRendererMixin {
     @Shadow @Final private Random random;
     //@formatter:on
 
-    @Inject(method = "renderModel", at = @At(value = "INVOKE_ASSIGN", target = "Lnet/minecraft/client/renderer/model/IBakedModel;getModelData(Lnet/minecraft/world/IBlockDisplayReader;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;Lnet/minecraftforge/client/model/data/IModelData;)Lnet/minecraftforge/client/model/data/IModelData;", shift = Shift.AFTER), cancellable = true)
+    @Inject(method = "renderModel", at = @At("HEAD"), cancellable = true)
     private void onRenderModel(IBlockDisplayReader world, BlockState state, BlockPos pos, IBakedModel model, ChunkModelBuffers buffers, boolean cull, long seed, IModelData modelData, @Nonnull CallbackInfoReturnable<Boolean> cbi) {
+        modelData = model.getModelData(world, pos, state, modelData); // Add support for this forge hook
+
         final MatrixStack mStack = matrixStack.get();
         final SinkingVertexBuilder builder = SinkingVertexBuilder.getInstance();
 
